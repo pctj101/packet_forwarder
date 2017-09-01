@@ -32,7 +32,6 @@ func GetLogger() ttnlog.Interface {
 		username := viper.GetString("elasticsearch.username")
 		password := viper.GetString("elasticsearch.password")
 		if username != "" {
-			fmt.Println(username, password)
 			esClient.SetAuthCredentials(username, password)
 		}
 
