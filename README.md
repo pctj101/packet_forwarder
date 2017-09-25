@@ -1,5 +1,7 @@
 # Packet Forwarder
 
+**⚠️ The development of this packet forwarder has been put on hold. We're currently working on new tools to make gateways easier to manage, that we will make public when ready. In the meanwhile, we recommend to use other packet forwarders ([Semtech packet forwarder](https://github.com/Lora-net/packet_forwarder), [MP packet forwarder](https://github.com/kersing/packet_forwarder)). To learn more, join the discussion on [the forum](https://www.thethingsnetwork.org/forum/t/new-ttn-packet-forwarder-available/7644/46).**
+
 Packet forwarder to make the link between a LoRa concentrator and [The Things Network](https://www.thethingsnetwork.org)'s backend.
 
 This packet forwarder **isn't destined** to [The Things Gateway](https://www.thethingsnetwork.org/docs/gateways/gateway/)'s users, but for users who **already have a gateway** from another vendor, and that want to connect it to The Things Network.
