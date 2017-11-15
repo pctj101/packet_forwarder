@@ -112,6 +112,12 @@ func init() {
 	startCmd.PersistentFlags().BoolP("verbose", "v", false, "Show debug logs")
 	startCmd.PersistentFlags().Bool("ignore-crc", false, "Send packets upstream even if CRC validation is incorrect")
 
+	startCmd.PersistentFlags().Bool("elasticsearch.enable", false, "Enable Elasticsearch logging")
+	startCmd.PersistentFlags().String("elasticsearch.address", "http://localhost:9200", "Elasticsearch endpoint to use")
+	startCmd.PersistentFlags().String("elasticsearch.prefix", "packet-forwarder", "Index prefix")
+	startCmd.PersistentFlags().String("elasticsearch.username", "", "Elasticsearch username")
+	startCmd.PersistentFlags().String("elasticsearch.password", "", "Elasticsearch password")
+
 	startCmd.PersistentFlags().Bool("gpsd.enable", false, "Enable GPSD")
 	startCmd.PersistentFlags().String("gpsd.address", gpsd.DefaultAddress, "Address to the gpsd daemon")
 
