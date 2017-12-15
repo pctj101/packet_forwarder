@@ -161,14 +161,10 @@ func (m *Manager) uplinkRoutine(bgCtx context.Context, runStart time.Time) chan 
 		m.ctx.Info("Waiting for uplink packets")
 		defer close(errC)
 		for {
-			packets, err := wrapper.Receive()
+			packets, err := wrapper.Receive(m.uplinkPollingRate)
 			if err != nil {
 				errC <- errors.Wrap(err, "Uplink packets retrieval error")
 				return
-			}
-			if len(packets) == 0 { // Empty payload => we sleep, then reiterate.
-				time.Sleep(m.uplinkPollingRate)
-				continue
 			}
 
 			m.ctx.WithField("NbPackets", len(packets)).Info("Received uplink packets")

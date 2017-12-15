@@ -4,9 +4,24 @@ package wrapper
 
 // #cgo CFLAGS: -I${SRCDIR}/../lora_gateway/libloragw/inc
 // #cgo LDFLAGS: -lm ${SRCDIR}/../lora_gateway/libloragw/libloragw.a
+// #include <pthread.h>
 // #include "config.h"
 // #include "loragw_hal.h"
 // #include "loragw_gps.h"
+// int send(pthread_mutex_t *mutex, struct lgw_pkt_tx_s packet) {
+//   int result;
+//   pthread_mutex_lock(mutex);
+//   result = lgw_send(packet);
+//   pthread_mutex_unlock(mutex);
+//   return result;
+// }
+// int status(pthread_mutex_t *mutex, uint8_t *result) {
+//   int query_result;
+//   pthread_mutex_lock(mutex);
+//   query_result = lgw_status(TX_STATUS, result);
+//   pthread_mutex_unlock(mutex);
+//   return query_result;
+// }
 import "C"
 
 import (
@@ -178,31 +193,20 @@ func SendDownlink(downlink *router.DownlinkMessage, conf util.Config, ctx log.In
 }
 
 func sendDownlinkConcentrator(txPacket C.struct_lgw_pkt_tx_s, ctx log.Interface) error {
-	for {
-		var txStatus C.uint8_t
-		concentratorMutex.Lock()
-		var result = C.lgw_status(C.TX_STATUS, &txStatus)
-		concentratorMutex.Unlock()
-		if result == C.LGW_HAL_ERROR {
-			ctx.Warn("Couldn't get concentrator status")
-		} else if txStatus == C.TX_EMITTING {
-			// XX: Should we stop emission (like in the legacy packet forwarder) or retry?
-			// If we retry, we might overwrite a normally scheduled downlink, that might
-			// then not be relayed by the concentrator...
-			ctx.Error("Concentrator is currently emitting")
-			return errors.New("Concentrator is already emitting")
-		} else if txStatus == C.TX_SCHEDULED {
-			ctx.Warn("A downlink was already scheduled, overwriting it")
-		}
-		break
+	var status C.uint8_t
+	result := C.status(mutex, &status)
+	if status == txEmitting {
+		return errors.New("Concentrator is already emitting")
+	}
+	if result == halError {
+		ctx.Warn("Couldn't get concentrator status")
+	} else if status == txScheduled {
+		ctx.Warn("A downlink was already scheduled, overwriting it")
 	}
 
-	concentratorMutex.Lock()
-	result := C.lgw_send(txPacket)
-	concentratorMutex.Unlock()
+	sendResult := C.send(mutex, txPacket)
 
-	if result == C.LGW_HAL_ERROR {
-		ctx.Warn("Downlink transmission to the concentrator failed")
+	if sendResult == halError {
 		return errors.New("Downlink transmission to the concentrator failed")
 	}
 

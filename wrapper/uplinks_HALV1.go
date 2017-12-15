@@ -4,11 +4,31 @@ package wrapper
 
 // #cgo CFLAGS: -I${SRCDIR}/../lora_gateway/libloragw/inc
 // #cgo LDFLAGS: -lm ${SRCDIR}/../lora_gateway/libloragw/libloragw.a
+// #include <unistd.h>
+// #include <pthread.h>
 // #include "config.h"
 // #include "loragw_hal.h"
 // #include "loragw_gps.h"
+// int receive(pthread_mutex_t *mutex, unsigned long long int sleep_time_ns, int nb_packets, struct lgw_pkt_rx_s packets[8]) {
+//   int result;
+//   while (true) {
+//     pthread_mutex_lock(mutex);
+//     result = lgw_receive(8, packets);
+//     pthread_mutex_unlock(mutex);
+//     if (result == LGW_HAL_ERROR) {
+//  	 return -1;
+//     }
+//     if (result > 0) {
+//	     return result;
+//     }
+//     usleep(sleep_time_ns / 1000);
+//   }
+// }
 import "C"
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 const NbMaxPackets = 8
 const nbRadios = C.LGW_RF_CHAIN_NB
@@ -81,12 +101,10 @@ func packetFromCPacket(cPacket C.struct_lgw_pkt_rx_s) Packet {
 	return p
 }
 
-func Receive() ([]Packet, error) {
+func Receive(sleepTime time.Duration) ([]Packet, error) {
 	var packets [NbMaxPackets]C.struct_lgw_pkt_rx_s
-	concentratorMutex.Lock()
-	nbPackets := C.lgw_receive(NbMaxPackets, &packets[0])
-	concentratorMutex.Unlock()
-	if nbPackets == C.LGW_HAL_ERROR {
+	nbPackets := C.receive(mutex, C.ulonglong(sleepTime.Nanoseconds()), NbMaxPackets, &packets[0])
+	if nbPackets < 0 {
 		return nil, errors.New("Failed packet fetch from the concentrator")
 	}
 	return packetsFromCPackets(packets, int(nbPackets)), nil

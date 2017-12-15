@@ -2,7 +2,10 @@
 
 package wrapper
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 const (
 	StatusCRCOK  = uint8(0)
@@ -17,7 +20,7 @@ const (
 
 // Randomly return 1 empty packet, once every 5000 times (since there's one query per 5 milliseconds)
 
-func Receive() ([]Packet, error) {
+func Receive(time.Duration) ([]Packet, error) {
 	packets := make([]Packet, 0)
 	if rand.Float64() <= 0.0002 {
 		dummyPacket := Packet{

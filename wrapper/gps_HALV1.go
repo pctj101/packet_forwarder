@@ -4,9 +4,17 @@ package wrapper
 
 // #cgo CFLAGS: -I${SRCDIR}/../lora_gateway/libloragw/inc
 // #cgo LDFLAGS: -lm ${SRCDIR}/../lora_gateway/libloragw/libloragw.a
+// #include <pthread.h>
 // #include "config.h"
 // #include "loragw_hal.h"
 // #include "loragw_gps.h"
+// int get_trigcnt(pthread_mutex_t *mutex, uint32_t *ts) {
+//   int result;
+//   pthread_mutex_lock(mutex);
+//   result = lgw_get_trigcnt(ts);
+//   pthread_mutex_unlock(mutex);
+//   return result;
+// }
 import "C"
 import (
 	"bufio"
@@ -23,6 +31,8 @@ var gps *os.File
 
 var gpsTimeReference = C.struct_tref{}
 var gpsTimeReferenceMutex = &sync.Mutex{}
+
+var gpsSuccess = C.LGW_GPS_SUCCESS
 
 var validCoordinates bool
 var coordinates GPSCoordinates
@@ -117,9 +127,8 @@ func UpdateGPSData(ctx log.Interface) error {
 	}
 
 	ctx.Debug("Fetching GPS timestamp")
-	concentratorMutex.Lock()
-	ok := C.lgw_get_trigcnt(&ts) == C.LGW_GPS_SUCCESS
-	concentratorMutex.Unlock()
+
+	ok := int(C.get_trigcnt(mutex, &ts)) == gpsSuccess
 
 	if !ok {
 		ctx.Warn("Failed to read concentrator timestamp")

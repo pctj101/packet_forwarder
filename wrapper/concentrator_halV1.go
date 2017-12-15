@@ -4,6 +4,7 @@ package wrapper
 
 // #cgo CFLAGS: -I${SRCDIR}/../lora_gateway/libloragw/inc
 // #cgo LDFLAGS: -lm ${SRCDIR}/../lora_gateway/libloragw/libloragw.a
+// #include <pthread.h>
 // #include "config.h"
 // #include "loragw_hal.h"
 // #include "loragw_gps.h"
@@ -12,15 +13,29 @@ package wrapper
 // }
 import "C"
 import (
-	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/TheThingsNetwork/go-utils/log"
 	"github.com/TheThingsNetwork/packet_forwarder/util"
+	"github.com/pkg/errors"
 )
 
-var concentratorMutex = &sync.Mutex{}
+var mutex = &C.pthread_mutex_t{}
+
+const (
+	halError   = C.LGW_HAL_ERROR
+	halSuccess = C.LGW_HAL_SUCCESS
+
+	txEmitting  = C.TX_EMITTING
+	txScheduled = C.TX_SCHEDULED
+	txStatus    = C.TX_STATUS
+)
+
+func init() {
+	if err := C.pthread_mutex_init(mutex, nil); err != 0 {
+		panic(fmt.Sprintf("Could not initialise pthread_mutex_init ; error code: %d", err))
+	}
+}
 
 var loraChannelBandwidths = map[uint32]C.uint8_t{
 	7800:   C.BW_7K8HZ,
