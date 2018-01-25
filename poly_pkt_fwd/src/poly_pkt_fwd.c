@@ -2474,8 +2474,8 @@ void thread_down(void* pic) {
 			}
 
 			txpkt.rf_power = rf_power_level;
-			 MSG("INFO: Downstream Packet RF power to - %d dBm\n", txpkt.rf_power);
-			 
+			MSG("INFO: Downstream Packet RF power to - %d dBm\n", txpkt.rf_power);
+			
 			/* record measurement data */
 			pthread_mutex_lock(&mx_meas_dw);
 			meas_dw_dgram_rcv += 1; /* count only datagrams with no JSON errors */
