@@ -305,7 +305,7 @@ static int parse_SX1301_configuration(const char * conf_file) {
 	struct lgw_conf_board_s boardconf;
 	struct lgw_conf_rxrf_s rfconf;
 	struct lgw_conf_rxif_s ifconf;
-	uint32_t sf, bw, fdev;	
+	uint32_t sf, bw, fdev;
 
 	/* try to parse JSON */
 	root_val = json_parse_file_with_comments(conf_file);
@@ -344,7 +344,6 @@ static int parse_SX1301_configuration(const char * conf_file) {
         if (lgw_board_setconf(boardconf) != LGW_HAL_SUCCESS) {
                 MSG("WARNING: Failed to configure board\n");
 	}
-
 
 	/* set configuration for tx gains */
 	memset(&txlut, 0, sizeof txlut); /* initialize configuration structure */
@@ -832,18 +831,17 @@ static int parse_gateway_configuration(const char * conf_file) {
 	}
 
 	/* Read antenna gain configuration */
-    val = json_object_get_value(conf_obj, "antenna_gain"); /* fetch value (if possible) */
-    if (val != NULL) {
-        if (json_value_get_type(val) == JSONNumber) {
-            antenna_gain = (int8_t)json_value_get_number(val);
-        } else {
-            MSG("WARNING: Data type for antenna_gain seems wrong, please check\n");
-            antenna_gain = 0;
-        }
-    }
-    MSG("INFO: antenna_gain %d dBi\n", antenna_gain);
-
-	
+	val = json_object_get_value(conf_obj, "antenna_gain"); /* fetch value (if possible) */
+	if (val != NULL) {
+		if (json_value_get_type(val) == JSONNumber) {
+			antenna_gain = (int8_t)json_value_get_number(val);
+		} else {
+			MSG("WARNING: Data type for antenna_gain seems wrong, please check\n");
+			antenna_gain = 0;
+		}
+	}
+	MSG("INFO: antenna_gain %d dBi\n", antenna_gain);
+		
 	/* Beacon signal period (optional) */
 	val = json_object_get_value(conf_obj, "beacon_period");
 	if (val != NULL) {
@@ -2465,21 +2463,19 @@ void thread_down(void* pic) {
 				txpkt.tx_mode = TIMESTAMPED;
 			}
 
-
 			/* iterate txlut settings and find max possible txPow */
 			rf_power_level = -100;
 
 			for (i=0; i<txlut.size; i++) {
-                if (txlut.lut[i].rf_power <= txpkt.rf_power 
-                	&& rf_power_level < txlut.lut[i].rf_power) {
-                   rf_power_level = txlut.lut[i].rf_power;
-                }
-            }
+				if (txlut.lut[i].rf_power <= txpkt.rf_power 
+				&& rf_power_level < txlut.lut[i].rf_power) {
+					rf_power_level = txlut.lut[i].rf_power;
+				}
+			}
 
-            txpkt.rf_power = rf_power_level;
-
-            MSG("INFO: Downstream Packet RF power to - %d dBm\n", txpkt.rf_power);
-           			
+			txpkt.rf_power = rf_power_level;
+			 MSG("INFO: Downstream Packet RF power to - %d dBm\n", txpkt.rf_power);
+			 
 			/* record measurement data */
 			pthread_mutex_lock(&mx_meas_dw);
 			meas_dw_dgram_rcv += 1; /* count only datagrams with no JSON errors */
