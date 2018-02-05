@@ -211,6 +211,10 @@ static uint32_t beacon_offset = 0; /* must be < beacon_period, set when the beac
 static uint32_t beacon_freq_hz = 0; /* TX beacon frequency, in Hz */
 static bool beacon_next_pps = false; /* signal to prepare beacon packet for TX, no need for mutex */
 
+/* Gateway specificities */
+static int8_t antenna_gain = 0;
+static struct lgw_tx_gain_lut_s txlut;
+
 /* auto-quit function */
 static uint32_t autoquit_threshold = 0; /* enable auto-quit after a number of non-acknowledged PULL_DATA (0 = disabled)*/
 
@@ -302,7 +306,6 @@ static int parse_SX1301_configuration(const char * conf_file) {
 	struct lgw_conf_rxrf_s rfconf;
 	struct lgw_conf_rxif_s ifconf;
 	uint32_t sf, bw, fdev;
-	struct lgw_tx_gain_lut_s txlut;
 
 	/* try to parse JSON */
 	root_val = json_parse_file_with_comments(conf_file);
@@ -826,7 +829,19 @@ static int parse_gateway_configuration(const char * conf_file) {
 			}
 		}
 	}
-	
+
+	/* Read antenna gain configuration */
+	val = json_object_get_value(conf_obj, "antenna_gain"); /* fetch value (if possible) */
+	if (val != NULL) {
+		if (json_value_get_type(val) == JSONNumber) {
+			antenna_gain = (int8_t)json_value_get_number(val);
+		} else {
+			MSG("WARNING: Data type for antenna_gain seems wrong, please check\n");
+			antenna_gain = 0;
+		}
+	}
+	MSG("INFO: antenna_gain %d dBi\n", antenna_gain);
+		
 	/* Beacon signal period (optional) */
 	val = json_object_get_value(conf_obj, "beacon_period");
 	if (val != NULL) {
@@ -1993,6 +2008,8 @@ void thread_down(void* pic) {
 	int32_t field_longitude; /* 3 bytes, derived from reference longitude */
 	uint16_t field_crc2;
 
+	int8_t rf_power_level  = -100;/* temp variable to iterate RF power configurations*/
+
 	//TODO: this should only be present in one thread => make special beacon thread?
 	/* beacon packet parameters */
 	beacon_pkt.tx_mode = ON_GPS; /* send on PPS pulse */
@@ -2284,7 +2301,10 @@ void thread_down(void* pic) {
 			/* parse TX power (optional field) */
 			val = json_object_get_value(txpk_obj,"powe");
 			if (val != NULL) {
-				txpkt.rf_power = (int8_t)json_value_get_number(val);
+				txpkt.rf_power = (int8_t)json_value_get_number(val) - antenna_gain;
+			}
+			else{
+				txpkt.rf_power = -6; // default to very low rf_power to ensure we'll tx withing regulation requirements
 			}
 			
 			/* Parse modulation (mandatory) */
@@ -2442,6 +2462,19 @@ void thread_down(void* pic) {
 			} else {
 				txpkt.tx_mode = TIMESTAMPED;
 			}
+
+			/* iterate txlut settings and find max possible txPow */
+			rf_power_level = -100;
+
+			for (i=0; i<txlut.size; i++) {
+				if (txlut.lut[i].rf_power <= txpkt.rf_power 
+				&& rf_power_level < txlut.lut[i].rf_power) {
+					rf_power_level = txlut.lut[i].rf_power;
+				}
+			}
+
+			txpkt.rf_power = rf_power_level;
+			MSG("INFO: Downstream Packet RF power to - %d dBm\n", txpkt.rf_power);
 			
 			/* record measurement data */
 			pthread_mutex_lock(&mx_meas_dw);
