@@ -441,7 +441,7 @@
 			"revisionTime": "2017-04-14T03:53:08Z"
 		},
 		{
-			"checksumSHA1": "zkNNauN735M7Jghr+MsARbb+/xQ=",
+			"checksumSHA1": "rLo31ffS0VeaRYKDTm+WSd8nUQ4=",
 			"path": "github.com/shirou/gopsutil/mem",
 			"revision": "70693b6a3da51a8a686d31f1b346077bbc066062",
 			"revisionTime": "2017-04-14T03:53:08Z"
@@ -555,7 +555,7 @@
 			"revisionTime": "2017-02-14T22:24:16Z"
 		},
 		{
-			"checksumSHA1": "uTQtOqR0ePMMcvuvAIksiIZxhqU=",
+			"checksumSHA1": "Xhsm+TevJogC8U4sG6FO+czBMps=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "7a6e5648d140666db5d920909e082ca00a87ba2c",
 			"revisionTime": "2017-02-01T04:15:14Z"
@@ -567,7 +567,7 @@
 			"revisionTime": "2017-02-07T17:42:20Z"
 		},
 		{
-			"checksumSHA1": "7Hjtgu1Yu+Ks0cKf2ldRhXAu/LE=",
+			"checksumSHA1": "kNE0OM5zElbmkeY6UD9JgBwrb2g=",
 			"path": "golang.org/x/text/unicode/norm",
 			"revision": "06d6eba81293389cafdff7fca90d75592194b2d9",
 			"revisionTime": "2017-02-07T17:42:20Z"
